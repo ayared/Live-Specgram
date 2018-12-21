@@ -18,9 +18,10 @@ import numpy as np
 import mic_read
 
 ############### Constants ###############
-SAMPLES_PER_FRAME = 10 #Number of mic reads concatenated within a single window
-nfft = 1024 #NFFT value for spectrogram
-overlap = 512 #overlap value for spectrogram
+#SAMPLES_PER_FRAME = 10 #Number of mic reads concatenated within a single window
+SAMPLES_PER_FRAME = 4
+nfft = 1024#256#1024 #NFFT value for spectrogram
+overlap = 1000#512 #overlap value for spectrogram
 rate = mic_read.RATE #sampling rate
 
 ############### Functions ###############
@@ -90,6 +91,8 @@ plt.gca().invert_yaxis()
 ############### Animate ###############
 anim = animation.FuncAnimation(fig,update_fig,blit = False,
                                interval=mic_read.CHUNK_SIZE/1000)
+
+                            
 try:
     plt.show()
 except:
