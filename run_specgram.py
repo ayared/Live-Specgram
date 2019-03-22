@@ -68,39 +68,42 @@ def update_fig(n):
         im.set_array(im_data)
     return im,
 
-############### Initialize Plot ###############
-fig = plt.figure()
-"""
-Launch the stream and the original spectrogram
-"""
-stream,pa = mic_read.open_mic()
-data = get_sample(stream,pa)
-arr2D,freqs,bins = get_specgram(data,rate)
-"""
-Setup the plot paramters
-"""
-extent = (bins[0],bins[-1]*SAMPLES_PER_FRAME,freqs[-1],freqs[0])
-im = plt.imshow(arr2D,aspect='auto',extent = extent,interpolation="none",
-                cmap = 'jet',norm = LogNorm(vmin=.01,vmax=1))
-plt.xlabel('Time (s)')
-plt.ylabel('Frequency (Hz)')
-plt.title('Real Time Spectogram')
-plt.gca().invert_yaxis()
-##plt.colorbar() #enable if you want to display a color bar
+def main():
+    ############### Initialize Plot ###############
+    fig = plt.figure()
+    """
+    Launch the stream and the original spectrogram
+    """
+    stream,pa = mic_read.open_mic()
+    data = get_sample(stream,pa)
+    arr2D,freqs,bins = get_specgram(data,rate)
+    """
+    Setup the plot paramters
+    """
+    extent = (bins[0],bins[-1]*SAMPLES_PER_FRAME,freqs[-1],freqs[0])
+    im = plt.imshow(arr2D,aspect='auto',extent = extent,interpolation="none",
+                    cmap = 'jet',norm = LogNorm(vmin=.01,vmax=1))
+    plt.xlabel('Time (s)')
+    plt.ylabel('Frequency (Hz)')
+    plt.title('Real Time Spectogram')
+    plt.gca().invert_yaxis()
+    ##plt.colorbar() #enable if you want to display a color bar
 
-############### Animate ###############
-anim = animation.FuncAnimation(fig,update_fig,blit = False,
-                               interval=mic_read.CHUNK_SIZE/1000)
+    ############### Animate ###############
+    anim = animation.FuncAnimation(fig,update_fig,blit = False,
+                                interval=mic_read.CHUNK_SIZE/1000)
 
-                            
-try:
-    plt.show()
-except:
-    print("Plot Closed")
+                                
+    try:
+        plt.show()
+    except:
+        print("Plot Closed")
 
-############### Terminate ###############
-stream.stop_stream()
-stream.close()
-pa.terminate()
-print("Program Terminated")
+    ############### Terminate ###############
+    stream.stop_stream()
+    stream.close()
+    pa.terminate()
+    print("Program Terminated")
 
+if __name__ == "__main__":
+    main()
