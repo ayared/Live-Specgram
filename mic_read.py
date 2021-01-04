@@ -29,11 +29,11 @@ def open_mic() -> Tuple[pyaudio.Stream, pyaudio.PyAudio]:
     ouputs: stream, PyAudio object
     """
     pa = pyaudio.PyAudio()
-    stream = pa.open(format=FORMAT,
+    stream = pa.open(input=True,
+                     format=FORMAT,
                      channels=CHANNELS,
                      rate=RATE,
-                     input=True,
-                     frames_per_buffer=CHUNK_SIZE)
+                     frames_per_buffer=2*CHUNK_SIZE)
     return stream, pa
 
 
@@ -44,7 +44,7 @@ def get_data(stream: pyaudio.Stream) -> np.ndarray:
     outputs: int16 data array
     """
     input_data = stream.read(CHUNK_SIZE)
-    data = np.fromstring(input_data, np.int16)
+    data = np.frombuffer(input_data, np.int16)
     return data
 
 

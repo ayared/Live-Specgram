@@ -19,7 +19,7 @@ from matplotlib.image import AxesImage
 from matplotlib.mlab import window_hanning, specgram
 from typing import Tuple
 
-from mic_read import CHUNK_SIZE, RATE, get_data, open_mic
+from mic_read import SAMPLE_LENGTH, RATE, get_data, open_mic
 
 SAMPLES_PER_FRAME = 4  # Number of mic reads concatenated within a single window
 N_FFT = 1_024  # NFFT value for spectrogram
@@ -36,9 +36,9 @@ def get_sample(stream: pyaudio.Stream) -> np.ndarray:
 
 
 def get_specgram(signal: np.ndarray) -> Tuple[
-    np.ndarray,  # 2D output array
-    np.ndarray,  # Frequencies
-    np.ndarray,  # Frequency bins
+    np.ndarray,  # 2D spectrum
+    np.ndarray,  # Frequency axis
+    np.ndarray,  # Time axis
 ]:
     """
     takes the FFT to create a spectrogram of the given audio signal
@@ -46,8 +46,11 @@ def get_specgram(signal: np.ndarray) -> Tuple[
     output: 2D Spectrogram Array, Frequency Array, Bin Array
     see matplotlib.mlab.specgram documentation for help
     """
-    return specgram(signal, window=window_hanning,
-                    Fs=RATE, NFFT=N_FFT, noverlap=OVERLAP)
+    return specgram(
+        signal,
+        Fs=RATE, NFFT=N_FFT, noverlap=OVERLAP,
+        window=window_hanning,
+    )
 
 
 def update_fig(frame: int, im: AxesImage, stream: pyaudio.Stream) -> Tuple[AxesImage]:
@@ -59,16 +62,21 @@ def update_fig(frame: int, im: AxesImage, stream: pyaudio.Stream) -> Tuple[AxesI
     outputs: updated image
     """
     data = get_sample(stream)
-    arr_2d, freqs, bins = get_specgram(data)
+    arr_2d, freqs, times = get_specgram(data)
     im_data = im.get_array()
+
+    # frame cannot be relied upon: we're called multiple times with 0 before it
+    # starts to increment.
+    frame = im_data.shape[1] // len(times)
 
     if frame < SAMPLES_PER_FRAME:
         im_data = np.hstack((im_data, arr_2d))
         im.set_array(im_data)
     else:
-        keep_block = arr_2d.shape[1] * (SAMPLES_PER_FRAME - 1)
-        im_data = np.delete(im_data, np.s_[:-keep_block], 1)
-        im_data = np.hstack((im_data, arr_2d))
+        im_data = np.hstack((
+            im_data[:, len(times):],
+            arr_2d,
+        ))
         im.set_array(im_data)
 
     return im,
@@ -81,23 +89,23 @@ def make_plot(stream: pyaudio.Stream) -> FuncAnimation:
 
     # Data for first frame
     data = get_sample(stream)
-    arr_2d, freqs, bins = get_specgram(data)
+    arr_2d, freqs, times = get_specgram(data)
 
     # Set up the plot parameters
-    extent = (bins[0], bins[-1]*SAMPLES_PER_FRAME, freqs[-1], freqs[0])
+    extent = (times[0], times[-1]*SAMPLES_PER_FRAME, freqs[-1], freqs[0])
     im = ax.imshow(arr_2d, aspect='auto', extent=extent, interpolation='none',
                    cmap='jet', norm=LogNorm(vmin=.01, vmax=1))
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Frequency (Hz)')
     ax.set_title('Real-Time Spectogram')
     ax.invert_yaxis()
-    # fig.colorbar()  # enable if you want to display a color bar
+    # fig.colorbar(im)  # enable if you want to display a color bar
 
     # Animate
     return FuncAnimation(
         fig,
         func=update_fig, fargs=(im, stream),
-        interval=CHUNK_SIZE/1000,
+        interval=SAMPLE_LENGTH,
         blit=True,
     )
 
