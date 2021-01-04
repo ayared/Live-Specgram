@@ -7,6 +7,7 @@ spectrogram visualization tool
 
 Dependencies: pyaudio, numpy and matplotlib
 """
+
 from typing import Tuple
 
 import pyaudio
@@ -14,8 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# RATE = 44100 #sample rate
-RATE = 16_000
+RATE = 16_000  # sample rate
 FORMAT = pyaudio.paInt16  # conversion format for PyAudio stream
 CHANNELS = 1  # microphone audio channels
 CHUNK_SIZE = 8_192  # number of samples to take per read
@@ -48,7 +48,7 @@ def get_data(stream: pyaudio.Stream) -> np.ndarray:
     return data
 
 
-def make_10k():
+def make_10k() -> Tuple[np.ndarray, np.ndarray]:
     """
     creates a 10kHz test tone
     """
@@ -60,7 +60,6 @@ def make_10k():
 
 def show_freq():
     """
-    show_freq:
     plots the test tone for a sanity check
     """
     x, y = make_10k()
