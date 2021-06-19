@@ -43,7 +43,7 @@ inputs: stream, PyAudio object
 outputs: int16 data array
 """
 def get_data(stream,pa):
-    input_data = stream.read(CHUNK_SIZE)
+    input_data = stream.read(CHUNK_SIZE, exception_on_overflow=False)
     data = np.fromstring(input_data,np.int16)
     return data
 

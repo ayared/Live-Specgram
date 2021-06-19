@@ -31,7 +31,7 @@ gets the audio data from the microphone
 inputs: audio stream and PyAudio object
 outputs: int16 array
 """
-def get_sample(stream,pa):
+def get_sample(stream, pa):
     data = mic_read.get_data(stream,pa)
     return data
 """
@@ -54,8 +54,8 @@ data needs to stay, shifting it left, and appending the new data.
 inputs: iteration number
 outputs: updated image
 """
-def update_fig(n):
-    data = get_sample(stream,pa)
+def update_fig(n, stream, pa, im):
+    data = get_sample(stream,  pa)
     arr2D,freqs,bins = get_specgram(data,rate)
     im_data = im.get_array()
     if n < SAMPLES_PER_FRAME:
@@ -74,8 +74,8 @@ def main():
     """
     Launch the stream and the original spectrogram
     """
-    stream,pa = mic_read.open_mic()
-    data = get_sample(stream,pa)
+    stream, pa = mic_read.open_mic()
+    data = get_sample(stream, pa)
     arr2D,freqs,bins = get_specgram(data,rate)
     """
     Setup the plot paramters
@@ -90,7 +90,8 @@ def main():
     ##plt.colorbar() #enable if you want to display a color bar
 
     ############### Animate ###############
-    anim = animation.FuncAnimation(fig,update_fig,blit = False,
+    upd_fig = lambda n: update_fig(n, stream=stream, pa=pa, im=im)
+    anim = animation.FuncAnimation(fig,upd_fig,blit = False,
                                 interval=mic_read.CHUNK_SIZE/1000)
 
                                 
